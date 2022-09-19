@@ -47,8 +47,9 @@ class MoneyContent extends StatelessWidget {
               const Flexible(flex: 3, child: MoneyContentLabel()),
               // Row with actions increase and decrease money counter and score Field
               Flexible(
-                  flex: 7,
-                  child: MoneyContentChangeActions(moneyValues: moneyValues)),
+                flex: 7,
+                child: MoneyContentChangeActions(moneyValues: moneyValues),
+              ),
             ],
           ),
         )
@@ -127,7 +128,8 @@ class MoneyContentChangeActionsChangeButtons extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        for (final moneyValue in moneyValues) ...[
+        for (final moneyValue
+            in isIncrement ? moneyValues : moneyValues.reversed) ...[
           Flexible(
             child: Container(
               color: Colors.red,
@@ -176,9 +178,9 @@ class MoneyContentResultField extends StatelessWidget {
     return Container(
       alignment: Alignment.center,
       color: Colors.blueGrey[300],
-      child: BlocBuilder<MoneyCubit, int>(
+      child: BlocBuilder<MoneyCubit, MoneyState>(
         builder: (context, state) {
-          return Text(state.toString());
+          return Text(state.moneyCounter[0].toString());
         },
       ),
     );

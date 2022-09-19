@@ -1,20 +1,18 @@
 import 'package:bloc/bloc.dart';
+part 'money_state.dart';
 
-class MoneyCubit extends Cubit<int> {
-  MoneyCubit() : super(0);
+class MoneyCubit extends Cubit<MoneyState> {
+  MoneyCubit() : super(MoneyState(moneyCounter: [0]));
 
   void increment(int newValue) {
-    final newState = state + newValue;
-    emit(newState);
+    final newState = state.moneyCounter;
+    newState[0] = state.moneyCounter[0] + newValue;
+    emit(MoneyState(moneyCounter: newState));
   }
 
   void decrement(int newValue) {
-    final newState = state - newValue;
-    emit(newState);
-  }
-
-  void newValue(int newValue) {
-    final newState = newValue;
-    emit(newState);
+    final newState = state.moneyCounter;
+    newState[0] = state.moneyCounter[0] - newValue;
+    emit(MoneyState(moneyCounter: newState));
   }
 }
