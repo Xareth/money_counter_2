@@ -17,16 +17,19 @@ class _MoneyState extends State<Money> {
       body: BlocProvider<MoneyCubit>(
         create: (context) => MoneyCubit(),
         // Money Content
-        child: const MoneyContent(),
+        child: MoneyContent(),
       ),
     );
   }
 }
 
+// Money Content
 class MoneyContent extends StatelessWidget {
-  const MoneyContent({
+  MoneyContent({
     Key? key,
   }) : super(key: key);
+
+  final moneyValues = [1, 5, 10];
 
   @override
   Widget build(BuildContext context) {
@@ -38,14 +41,14 @@ class MoneyContent extends StatelessWidget {
         Container(
           color: Colors.amber,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[
               // Label with money Value
-              const MoneyContentLabel(),
-              // Row with actions increase and decrease money counter
-              MoneyContentButtons(),
-              // Field shows current money counter
-              const MoneyContentResultField(),
+              const Flexible(flex: 3, child: MoneyContentLabel()),
+              // Row with actions increase and decrease money counter and score Field
+              Flexible(
+                  flex: 7,
+                  child: MoneyContentChangeActions(moneyValues: moneyValues)),
             ],
           ),
         )
@@ -63,6 +66,7 @@ class MoneyContentLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      alignment: Alignment.center,
       padding: const EdgeInsets.all(25),
       color: Colors.grey,
       child: const Text('50 PLN'),
@@ -70,111 +74,93 @@ class MoneyContentLabel extends StatelessWidget {
   }
 }
 
-// Row with actions increase and decrease money counter
-class MoneyContentButtons extends StatelessWidget {
-  MoneyContentButtons({Key? key}) : super(key: key);
+// Row with actions increase and decrease money counter and score Field
+class MoneyContentChangeActions extends StatelessWidget {
+  const MoneyContentChangeActions({
+    Key? key,
+    required this.moneyValues,
+  }) : super(key: key);
 
-  final moneyValues = [1, 5, 10];
+  final List<int> moneyValues;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        color: Colors.blueAccent,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            // Decrease money counter buttons
-            for (final moneyValue in moneyValues.reversed) ...[
-              MoneyContentButtonsDecreaseButtons(moneyValue: moneyValue),
-            ],
-            // Sized Box that work as margin
-            Container(
-              color: Colors.brown,
-              child: const SizedBox(
-                width: 10,
-              ),
-            ),
-            // TextField to manually provide money Value
-            const MoneyContentButtonsTextField(),
-            // Sized Box that work as margin
-            const SizedBox(
-              width: 10,
-            ),
-            // Increase money counter buttons
-            for (final moneyValue in moneyValues) ...[
-              MoneyContentButtonsIncreaseButtons(moneyValue: moneyValue),
-            ],
-          ],
-        ),
+    return Container(
+      color: Colors.green[200],
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: <Widget>[
+          // Decrease money counter buttons
+          Flexible(
+            flex: 3,
+            child: MoneyContentChangeActionsChangeButtons(
+                moneyValues: moneyValues, isIncrement: false),
+          ),
+          // Field shows current money counter
+          const Flexible(flex: 1, child: MoneyContentResultField()),
+
+          // Increase money counter buttons
+          Flexible(
+            flex: 3,
+            child: MoneyContentChangeActionsChangeButtons(
+                moneyValues: moneyValues, isIncrement: true),
+          ),
+        ],
       ),
     );
   }
 }
 
-// TextField to manually provide money Value
-class MoneyContentButtonsTextField extends StatelessWidget {
-  const MoneyContentButtonsTextField({
+// Change money counter buttons
+class MoneyContentChangeActionsChangeButtons extends StatelessWidget {
+  const MoneyContentChangeActionsChangeButtons({
+    Key? key,
+    required this.moneyValues,
+    required this.isIncrement,
+  }) : super(key: key);
+
+  final List<int> moneyValues;
+  final bool isIncrement;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        for (final moneyValue in moneyValues) ...[
+          Flexible(
+            child: Container(
+              color: Colors.red,
+              child: FloatingActionButton(
+                  onPressed: () {
+                    isIncrement
+                        ? context.read<MoneyCubit>().increment(moneyValue)
+                        : context.read<MoneyCubit>().decrement(moneyValue);
+                  },
+                  backgroundColor: isIncrement ? Colors.green : Colors.red,
+                  child:
+                      Text((moneyValue * (isIncrement ? 1 : -1)).toString())),
+            ),
+          )
+        ],
+      ],
+    );
+  }
+}
+
+// Sized Box that work as margin
+class MoneyContentButtonsSizedBox extends StatelessWidget {
+  const MoneyContentButtonsSizedBox({
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const Flexible(
-      child: TextField(
-        maxLength: 3,
-        decoration: InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: '0',
-          counterText: '',
-        ),
+    return Container(
+      color: Colors.brown,
+      child: const SizedBox(
+        width: 10,
       ),
-    );
-  }
-}
-
-// Increase money counter buttons
-class MoneyContentButtonsIncreaseButtons extends StatelessWidget {
-  const MoneyContentButtonsIncreaseButtons({
-    Key? key,
-    required this.moneyValue,
-  }) : super(key: key);
-
-  final int moneyValue;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.red,
-      child: FloatingActionButton(
-          onPressed: () {
-            context.read<MoneyCubit>().increment(moneyValue);
-          },
-          backgroundColor: Colors.red,
-          child: Text((moneyValue).toString())),
-    );
-  }
-}
-
-// Decrease money counter buttons
-class MoneyContentButtonsDecreaseButtons extends StatelessWidget {
-  const MoneyContentButtonsDecreaseButtons({
-    Key? key,
-    required this.moneyValue,
-  }) : super(key: key);
-
-  final int moneyValue;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.red,
-      child: FloatingActionButton(
-          onPressed: () {
-            context.read<MoneyCubit>().decrement(moneyValue);
-          },
-          backgroundColor: Colors.red,
-          child: Text((moneyValue * -1).toString())),
     );
   }
 }
@@ -187,13 +173,14 @@ class MoneyContentResultField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MoneyCubit, int>(
-      builder: (context, state) {
-        return Container(
-            padding: const EdgeInsets.all(25),
-            color: Colors.grey[500],
-            child: Text(state.toString()));
-      },
+    return Container(
+      alignment: Alignment.center,
+      color: Colors.blueGrey[300],
+      child: BlocBuilder<MoneyCubit, int>(
+        builder: (context, state) {
+          return Text(state.toString());
+        },
+      ),
     );
   }
 }
