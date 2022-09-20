@@ -19,16 +19,11 @@ class _MoneyState extends State<Money> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Licznik nominałów'),
-          actions: <Widget>[
-            IconButton(
-                onPressed: () {
-                  context.read<MoneyCubit>().reset();
-                },
-                icon: const Icon(Icons.clear_all_rounded)),
-          ],
         ),
         // Money Content
-        body: const MoneyContent(),
+        body: ConstrainedBox(
+            constraints: const BoxConstraints.expand(width: 800),
+            child: const MoneyContent()),
       ),
     );
   }
@@ -46,36 +41,80 @@ class MoneyContent extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
+        // Row with headers
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const <Widget>[
+            Expanded(flex: 2, child: Text('Nominały')),
+            Expanded(flex: 6, child: Text('Akcje')),
+            Expanded(flex: 2, child: Text('Wynik')),
+            Expanded(flex: 1, child: Text('')),
+          ],
+        ),
         // Rows with each money counter
         for (var data in moneyData) ...[
-          Container(
-            color: Colors.amber,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                // Label with money Value
-                Flexible(
-                    flex: 2,
-                    child: MoneyContentLabel(
-                      label: data[1],
-                    )),
-                // Row with actions increase and decrease money counter and score Field
-                Flexible(
-                  flex: 6,
-                  child: MoneyContentChangeActions(
-                      data: data, moneyData: moneyData),
-                ),
-                // Container with money results
-                Flexible(
-                    flex: 2,
-                    child: MoneyContentScore(
-                      data: data,
-                    ))
-              ],
+          Column(
+            children: <Widget>[
+              MoneyContentMain(data: data),
+            ],
+          ),
+        ],
+        // Row with summary
+        const MoneyContentSummaryRow()
+      ],
+    );
+  }
+}
+
+// Rows with each money counter
+class MoneyContentMain extends StatelessWidget {
+  const MoneyContentMain({
+    Key? key,
+    required this.data,
+  }) : super(key: key);
+
+  // ignore: prefer_typing_uninitialized_variables
+  final data;
+
+  @override
+  Widget build(BuildContext context) {
+    // ignore: avoid_unnecessary_containers
+    return Container(
+      // color: Colors.amber,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          // Label with money Value
+          Flexible(
+              flex: 2,
+              child: MoneyContentLabel(
+                label: data[1],
+              )),
+          // Row with actions increase and decrease money counter and score Field
+          Flexible(
+            flex: 6,
+            child: MoneyContentChangeActions(data: data, moneyData: moneyData),
+          ),
+          // Container with money results
+          Flexible(
+            flex: 2,
+            child: MoneyContentScore(
+              data: data,
+            ),
+          ),
+          // Button to reset current score in a row
+          Flexible(
+            flex: 1,
+            child: ElevatedButton(
+              style: const ButtonStyle(),
+              onPressed: () {
+                context.read<MoneyCubit>().reset(data[0]);
+              },
+              child: const Icon(Icons.autorenew),
             ),
           )
         ],
-      ],
+      ),
     );
   }
 }
@@ -91,7 +130,7 @@ class MoneyContentLabel extends StatelessWidget {
     return Container(
       alignment: Alignment.center,
       padding: const EdgeInsets.all(25),
-      color: Colors.grey,
+      color: Colors.grey[300],
       child: Text('$label PLN'),
     );
   }
@@ -103,14 +142,14 @@ class MoneyContentChangeActions extends StatelessWidget {
       {Key? key, required this.data, required this.moneyData})
       : super(key: key);
 
-  final moneyValues = [1, 5, 10];
+  final moneyValues = [1, 5];
   final List<dynamic> data;
   final List<dynamic> moneyData;
 
   @override
   Widget build(BuildContext context) {
+    // ignore: avoid_unnecessary_containers
     return Container(
-      color: Colors.green[200],
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
@@ -163,8 +202,8 @@ class MoneyContentChangeActionsChangeButtons extends StatelessWidget {
         for (final moneyValue
             in isIncrement ? moneyValues : moneyValues.reversed) ...[
           Flexible(
+            // ignore: avoid_unnecessary_containers
             child: Container(
-              color: Colors.red,
               child: FloatingActionButton(
                   onPressed: () {
                     isIncrement
@@ -194,8 +233,8 @@ class MoneyContentButtonsSizedBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: avoid_unnecessary_containers
     return Container(
-      color: Colors.brown,
       child: const SizedBox(
         width: 10,
       ),
@@ -214,7 +253,6 @@ class MoneyContentResultField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      color: Colors.blueGrey[300],
       child: BlocBuilder<MoneyCubit, MoneyState>(
         builder: (context, state) {
           return Text(state.moneyCounter[position][2].toString());
@@ -224,7 +262,6 @@ class MoneyContentResultField extends StatelessWidget {
   }
 }
 
-// Container with money results
 class MoneyContentScore extends StatelessWidget {
   const MoneyContentScore({Key? key, required this.data}) : super(key: key);
 
@@ -234,13 +271,39 @@ class MoneyContentScore extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      color: Colors.red,
       child: BlocBuilder<MoneyCubit, MoneyState>(
         builder: (context, state) {
           final score = state.moneyCounter[data[0]][3].toString();
           return Text('$score PLN');
         },
       ),
+    );
+  }
+}
+
+class MoneyContentSummaryRow extends StatelessWidget {
+  const MoneyContentSummaryRow({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Expanded(flex: 8, child: Container()),
+        Expanded(
+          flex: 2,
+          // ignore: avoid_unnecessary_containers
+          child: Container(
+            child:
+                BlocBuilder<MoneyCubit, MoneyState>(builder: (context, state) {
+              return Text(state.moneySummary.toString());
+            }),
+          ),
+        ),
+        Expanded(flex: 1, child: Container()),
+      ],
     );
   }
 }
